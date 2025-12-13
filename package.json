@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "next": "16.0.10",
+    "onnxruntime-node": "^1.23.2",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "react-webcam": "^7.2.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
