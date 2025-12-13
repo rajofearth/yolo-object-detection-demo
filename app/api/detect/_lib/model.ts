@@ -11,9 +11,9 @@ export async function getSession(): Promise<ort.InferenceSession> {
   }
 
   try {
-    const modelPath = join(process.cwd(), "public", "models", "yolo11n.onnx");
+    const modelPath = join(process.cwd(), "public", "models", "yolo11x.onnx");
     session = await ort.InferenceSession.create(modelPath, {
-      executionProviders: ["cpu"],
+      executionProviders: ["webgpu","cpu"],
     });
 
     if (!sessionInitialized) {
