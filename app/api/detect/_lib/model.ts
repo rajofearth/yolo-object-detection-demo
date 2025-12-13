@@ -13,7 +13,7 @@ export async function getSession(): Promise<ort.InferenceSession> {
   try {
     const modelPath = join(process.cwd(), "public", "models", "yolo11x.onnx");
     session = await ort.InferenceSession.create(modelPath, {
-      executionProviders: ["webgpu","cpu"],
+      executionProviders: ["webgpu", "cpu"],
     });
 
     if (!sessionInitialized) {
