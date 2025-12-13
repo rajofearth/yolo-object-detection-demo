@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
+import { cocoClassName } from "./lib/coco";
 
 interface Detection {
   x1: number;
@@ -98,7 +99,7 @@ export default function Home() {
                   // Draw label background
                   ctx.fillStyle = "#00ff00";
                   ctx.font = "16px Arial";
-                  const label = `Class ${det.class} ${(det.confidence * 100).toFixed(1)}%`;
+                  const label = `${cocoClassName(det.class)} ${(det.confidence * 100).toFixed(1)}%`;
                   const textMetrics = ctx.measureText(label);
                   const labelHeight = 20;
                   ctx.fillRect(x1, y1 - labelHeight, textMetrics.width + 4, labelHeight);
