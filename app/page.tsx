@@ -23,6 +23,8 @@ export default function Home() {
   const [detectionCount, setDetectionCount] = useState(0);
   const [lastLatency, setLastLatency] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDetectionActive, setIsDetectionActive] = useState(true);
+  const [isCameraActive, setIsCameraActive] = useState(true);
   const inFlightRef = useRef(false);
 
   const updateCanvasSize = () => {
@@ -35,6 +37,8 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if (!isDetectionActive || !isCameraActive) return;
+
     const interval = setInterval(async () => {
       if (webcamRef.current && canvasRef.current && !inFlightRef.current) {
         const imageSrc = webcamRef.current.getScreenshot(); // base64 JPEG
@@ -54,7 +58,10 @@ export default function Home() {
             });
 
             const json = (await res.json()) as DetectResponse;
-            const detections = json.detections ?? [];
+            // Filter detections with confidence above 60%
+            const detections = (json.detections ?? []).filter(
+              (det) => det.confidence > 0.5
+            );
             const frameW = json.frame?.width ?? webcamRef.current.video?.videoWidth ?? 640;
             const frameH =
               json.frame?.height ?? webcamRef.current.video?.videoHeight ?? 480;
@@ -123,21 +130,77 @@ export default function Home() {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [isDetectionActive, isCameraActive]);
+
+  const toggleDetection = () => {
+    setIsDetectionActive((prev) => !prev);
+    if (isDetectionActive && canvasRef.current) {
+      // Clear canvas when stopping detection
+      const ctx = canvasRef.current.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+      setDetectionCount(0);
+    }
+  };
+
+  const toggleCamera = () => {
+    setIsCameraActive((prev) => {
+      const newState = !prev;
+      // Stop detection when camera is turned off
+      if (!newState) {
+        setIsDetectionActive(false);
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          }
+        }
+        setDetectionCount(0);
+      }
+      return newState;
+    });
+  };
 
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      <Webcam
-        ref={webcamRef}
-        width={640}
-        height={480}
-        videoConstraints={{
-          width: 640,
-          height: 480,
-        }}
-        onUserMedia={updateCanvasSize}
-        style={{ display: "block" }}
-      />
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        width: "100%",
+      }}
+    >
+      <div style={{ position: "relative", display: "inline-block" }}>
+      {isCameraActive ? (
+        <Webcam
+          ref={webcamRef}
+          width={640}
+          height={480}
+          videoConstraints={{
+            width: 640,
+            height: 480,
+          }}
+          onUserMedia={updateCanvasSize}
+          style={{ display: "block" }}
+        />
+      ) : (
+        <div
+          style={{
+            width: 640,
+            height: 480,
+            background: "#000",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontSize: "18px",
+          }}
+        >
+          Camera Stopped
+        </div>
+      )}
       <canvas
         ref={canvasRef}
         style={{
@@ -149,6 +212,67 @@ export default function Home() {
           height: "100%",
         }}
       />
+      {/* Control Buttons */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 10,
+          left: 10,
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        <button
+          onClick={toggleDetection}
+          disabled={!isCameraActive}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: isDetectionActive ? "#ef4444" : "#22c55e",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            cursor: isCameraActive ? "pointer" : "not-allowed",
+            fontSize: "14px",
+            fontWeight: "600",
+            transition: "background-color 0.2s",
+            opacity: isCameraActive ? 1 : 0.5,
+          }}
+          onMouseEnter={(e) => {
+            if (isCameraActive) {
+              e.currentTarget.style.opacity = "0.9";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (isCameraActive) {
+              e.currentTarget.style.opacity = "1";
+            }
+          }}
+        >
+          {isDetectionActive ? "Stop Detection" : "Start Detection"}
+        </button>
+        <button
+          onClick={toggleCamera}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: isCameraActive ? "#ef4444" : "#22c55e",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "600",
+            transition: "background-color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = "0.9";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = "1";
+          }}
+        >
+          {isCameraActive ? "Stop Camera" : "Start Camera"}
+        </button>
+      </div>
       {/* Debug UI */}
       <div
         style={{
@@ -166,6 +290,7 @@ export default function Home() {
         <div>Detections: {detectionCount}</div>
         {lastLatency !== null && <div>Latency: {lastLatency.toFixed(0)}ms</div>}
         {isProcessing && <div>Processing...</div>}
+      </div>
       </div>
     </div>
   );

@@ -185,7 +185,7 @@ function postprocess(
   }
 
   const detections: Detection[] = [];
-  const confidenceThreshold = 0.35;
+  const confidenceThreshold = 0.5; // 50% minimum confidence required
 
   // Transpose data if needed for row-major access
   let accessData: Float32Array;
