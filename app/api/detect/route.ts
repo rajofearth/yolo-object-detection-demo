@@ -21,7 +21,7 @@ async function getSession() {
   if (!session) {
     const modelPath = join(process.cwd(), "public", "models", "yolo11n.onnx");
     session = await ort.InferenceSession.create(modelPath, {
-      executionProviders: ["cpu"],
+      executionProviders: ["webgpu","cpu"],
     });
 
     // Log model info once on first load
