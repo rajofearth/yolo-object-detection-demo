@@ -40,9 +40,15 @@ export function useWebcamDetect(
   const abortControllerRef = useRef<AbortController | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastRequestTimeRef = useRef<number>(0);
+  const isActiveRef = useRef<boolean>(isActive);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
 
   const processFrame = useCallback(async () => {
-    if (!isActive || !webcamRef.current) {
+    if (!isActiveRef.current || !webcamRef.current) {
       return;
     }
 
@@ -109,13 +115,13 @@ export function useWebcamDetect(
       setIsProcessing(false);
       abortControllerRef.current = null;
 
-      if (isActive) {
+      if (isActiveRef.current) {
         timeoutRef.current = setTimeout(() => {
           void processFrame();
         }, MIN_FRAME_INTERVAL_MS);
       }
     }
-  }, [isActive, webcamRef, minIntervalMs, minConfidence]);
+  }, [webcamRef, minIntervalMs, minConfidence]);
 
   useEffect(() => {
     if (!isActive) {

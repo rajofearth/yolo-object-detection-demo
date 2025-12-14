@@ -24,11 +24,15 @@ export function DetectView(): React.JSX.Element {
     frameDimensions,
   } = useWebcamDetect(webcamRef, isDetectionActive && isCameraActive);
 
-  const toggleDetection = () => {
+  const toggleDetection = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsDetectionActive((prev) => !prev);
   };
 
-  const toggleCamera = () => {
+  const toggleCamera = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsCameraActive((prev) => {
       const newState = !prev;
       if (!newState) {
@@ -99,7 +103,7 @@ export function DetectView(): React.JSX.Element {
               Camera Stopped
             </div>
           )}
-          {isCameraActive && (
+          {isCameraActive && isDetectionActive && (
             <OverlayCanvas
               webcamRef={webcamRef}
               detections={detections}
